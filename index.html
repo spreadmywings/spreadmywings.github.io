@@ -265,6 +265,138 @@
             
               
                 
+                <a class="post-title-link" href="/2016/05/25/Keepalived在Kubernetes中的应用/" itemprop="url">
+                  Keepalived在Kubernetes中的应用
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-05-25T14:58:08+08:00" content="2016-05-25">
+              2016-05-25
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2016/05/25/Keepalived在Kubernetes中的应用/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/05/25/Keepalived在Kubernetes中的应用/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+             <span id="/2016/05/25/Keepalived在Kubernetes中的应用/" class="leancloud_visitors" data-flag-title="Keepalived在Kubernetes中的应用">
+               &nbsp; | &nbsp;
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               <span class="post-meta-item-text">阅读次数 </span>
+               <span class="leancloud-visitors-count"></span>
+              </span>
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <p><img src="/images/gear1.jpg" alt=""></p>
+<h4 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h4><p>Keepalived在双机热备的用途上使用广泛，在功能不需要太复杂的场合比Heartbeat更易于配置，它的心跳检测功能和切换时滞也比后者更加优秀。Kubernetes是Docker的集群管理软件，无论功能性和管理的便利性都深得管理人员喜爱。<br>Kubernetes的运算节点workernode运行着各类服务的Docker容器，在集群对某容器启用副本的情况下该容器便具备了故障自动转移的特性，也就是说一旦这个节点失效，调度器会在另外一个workernode节点启动该容器的副本从而实现容器的高可用。<br>管理节点masternode默认是单节点，一旦失效则整个集群丧失管理能力。管理节点组成高可靠特性最少需要3个节点，在可用服务器或者可管理的workernode不多的情况下使用Keepalived组建masternode高可用是个可行的选择，同时对于有外网接口的workernode（具有双网口），防止该节点失效导致服务不能出外网，用Keepalived搭建热备节点（备用节点同样做为workernode）也是很好的。<br>
+          <div class="post-more-link text-center">
+            <a class="btn" href="/2016/05/25/Keepalived在Kubernetes中的应用/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
                 <a class="post-title-link" href="/2016/05/23/国斗繁殖全记录/" itemprop="url">
                   国斗繁殖全记录
                 </a>
@@ -681,7 +813,7 @@
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">3</span>
+              <span class="site-state-item-count">4</span>
               <span class="site-state-item-name">日志</span>
             </a>
           </div>
@@ -689,7 +821,7 @@
           
             <div class="site-state-item site-state-categories">
               <a href="/categories">
-                <span class="site-state-item-count">3</span>
+                <span class="site-state-item-count">4</span>
                 <span class="site-state-item-name">分类</span>
               </a>
             </div>
@@ -698,7 +830,7 @@
           
             <div class="site-state-item site-state-tags">
               <a href="/tags">
-                <span class="site-state-item-count">3</span>
+                <span class="site-state-item-count">6</span>
                 <span class="site-state-item-name">标签</span>
               </a>
             </div>

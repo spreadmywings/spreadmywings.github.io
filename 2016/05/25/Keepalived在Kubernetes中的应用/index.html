@@ -1,0 +1,770 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.useso.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Keepalived,Kubernetes,CentOS7," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.1" />
+
+
+
+
+
+
+<meta name="description" content="前言Keepalived在双机热备的用途上使用广泛，在功能不需要太复杂的场合比Heartbeat更易于配置，它的心跳检测功能和切换时滞也比后者更加优秀。Kubernetes是Docker的集群管理软件，无论功能性和管理的便利性都深得管理人员喜爱。Kubernetes的运算节点workernode运行着各类服务的Docker容器，在集群对某容器启用副本的情况下该容器便具备了故障自动转移的特性，也就">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Keepalived在Kubernetes中的应用">
+<meta property="og:url" content="http://www.zengyee.me/2016/05/25/Keepalived在Kubernetes中的应用/index.html">
+<meta property="og:site_name" content="zengyee's 私藏馆">
+<meta property="og:description" content="前言Keepalived在双机热备的用途上使用广泛，在功能不需要太复杂的场合比Heartbeat更易于配置，它的心跳检测功能和切换时滞也比后者更加优秀。Kubernetes是Docker的集群管理软件，无论功能性和管理的便利性都深得管理人员喜爱。Kubernetes的运算节点workernode运行着各类服务的Docker容器，在集群对某容器启用副本的情况下该容器便具备了故障自动转移的特性，也就">
+<meta property="og:image" content="http://www.zengyee.me/images/gear1.jpg">
+<meta property="og:updated_time" content="2016-05-25T09:06:08.695Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Keepalived在Kubernetes中的应用">
+<meta name="twitter:description" content="前言Keepalived在双机热备的用途上使用广泛，在功能不需要太复杂的场合比Heartbeat更易于配置，它的心跳检测功能和切换时滞也比后者更加优秀。Kubernetes是Docker的集群管理软件，无论功能性和管理的便利性都深得管理人员喜爱。Kubernetes的运算节点workernode运行着各类服务的Docker容器，在集群对某容器启用副本的情况下该容器便具备了故障自动转移的特性，也就">
+<meta name="twitter:image" content="http://www.zengyee.me/images/gear1.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Mist',
+    sidebar: {"position":"right","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 0,
+      author: '博主'
+    }
+  };
+</script>
+
+  <title> Keepalived在Kubernetes中的应用 | zengyee's 私藏馆 </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?727a4d132cb3ea3ae31cc0efbaa34c34";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-right page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">zengyee's 私藏馆</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle"></p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="#" class="st-search-show-outputs">
+          
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <form class="site-search-form">
+  <input type="text" id="st-search-input" class="st-search-input st-default-search-input" />
+</form>
+
+<script type="text/javascript">
+  (function(w,d,t,u,n,s,e){w['SwiftypeObject']=n;w[n]=w[n]||function(){
+    (w[n].q=w[n].q||[]).push(arguments);};s=d.createElement(t);
+    e=d.getElementsByTagName(t)[0];s.async=1;s.src=u;e.parentNode.insertBefore(s,e);
+  })(window,document,'script','//s.swiftypecdn.com/install/v2/st.js','_st');
+
+  _st('install', 'L9KXT5YAUXb1GY6jsGQq','2.0.0');
+</script>
+
+
+
+    </div>
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                Keepalived在Kubernetes中的应用
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-05-25T14:58:08+08:00" content="2016-05-25">
+              2016-05-25
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2016/05/25/Keepalived在Kubernetes中的应用/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/05/25/Keepalived在Kubernetes中的应用/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+             <span id="/2016/05/25/Keepalived在Kubernetes中的应用/" class="leancloud_visitors" data-flag-title="Keepalived在Kubernetes中的应用">
+               &nbsp; | &nbsp;
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               <span class="post-meta-item-text">阅读次数 </span>
+               <span class="leancloud-visitors-count"></span>
+              </span>
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p><img src="/images/gear1.jpg" alt=""></p>
+<h4 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h4><p>Keepalived在双机热备的用途上使用广泛，在功能不需要太复杂的场合比Heartbeat更易于配置，它的心跳检测功能和切换时滞也比后者更加优秀。Kubernetes是Docker的集群管理软件，无论功能性和管理的便利性都深得管理人员喜爱。<br>Kubernetes的运算节点workernode运行着各类服务的Docker容器，在集群对某容器启用副本的情况下该容器便具备了故障自动转移的特性，也就是说一旦这个节点失效，调度器会在另外一个workernode节点启动该容器的副本从而实现容器的高可用。<br>管理节点masternode默认是单节点，一旦失效则整个集群丧失管理能力。管理节点组成高可靠特性最少需要3个节点，在可用服务器或者可管理的workernode不多的情况下使用Keepalived组建masternode高可用是个可行的选择，同时对于有外网接口的workernode（具有双网口），防止该节点失效导致服务不能出外网，用Keepalived搭建热备节点（备用节点同样做为workernode）也是很好的。<br><a id="more"></a><br>下面是本人实践的使用Keepalived创建masternode备用节点，同时该节点也作为workernode的一个实例。</p>
+<h4 id="准备工作"><a href="#准备工作" class="headerlink" title="准备工作"></a>准备工作</h4><p>两台CentOS7系统的服务器或虚拟机，分别做为Keepalived的master节点和backup节点。下面操作需要分别在两台机器上面完成。</p>
+<h5 id="禁用selinux"><a href="#禁用selinux" class="headerlink" title="禁用selinux"></a>禁用selinux</h5><p>略</p>
+<h5 id="禁用防火墙"><a href="#禁用防火墙" class="headerlink" title="禁用防火墙"></a>禁用防火墙</h5><p><code>systemctl disable firewalld.service</code></p>
+<h5 id="设置DNS"><a href="#设置DNS" class="headerlink" title="设置DNS"></a>设置DNS</h5><p><code>vi /etc/NetworkManager/NetworkManager.conf</code><br>在main部分添加<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dns=none</span><br></pre></td></tr></table></figure></p>
+<p>重启服务<br><code>systemctl restart NetworkManager.service</code><br>编辑文件<br><code>vi /etc/resolv.conf</code><br>写入下面内容<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">nameserver 202.96.128.166</span><br><span class="line">nameserver 202.96.134.133</span><br></pre></td></tr></table></figure></p>
+<p>重启系统。</p>
+<h5 id="安装可选软件"><a href="#安装可选软件" class="headerlink" title="安装可选软件"></a>安装可选软件</h5><p>killall用于检测脚本中检测进程是否存在，如果不使用检测脚本，可以不安装。本例没有使用检测脚本。<br><code>yum install psmisc</code></p>
+<h5 id="安装并配置iptables"><a href="#安装并配置iptables" class="headerlink" title="安装并配置iptables"></a>安装并配置iptables</h5><p><code>yum install iptables-services</code><br>配置防火墙，仅供参考。<br><code>iptables -X</code><br><code>iptables-save &gt; /etc/sysconfig/iptables</code><br><code>vi /etc/sysconfig/iptables</code><br>修改成下面内容，用于开启NAT和vrrp通行<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"># Generated by iptables-save v1.4.21 on Fri Apr  1 19:19:21 2016</span><br><span class="line">*filter</span><br><span class="line">:INPUT ACCEPT [0:0]</span><br><span class="line">:FORWARD ACCEPT [0:0]</span><br><span class="line">:OUTPUT ACCEPT [0:0]</span><br><span class="line">-A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT</span><br><span class="line">-A INPUT -p icmp -j ACCEPT</span><br><span class="line">-A INPUT -p vrrp -j ACCEPT</span><br><span class="line">-A INPUT -i lo -j ACCEPT</span><br><span class="line">-A INPUT -p tcp -m state --state NEW -m tcp --dport 22 -j ACCEPT</span><br><span class="line">COMMIT</span><br><span class="line"># Completed on Fri Apr  1 19:19:21 2016</span><br><span class="line"># Generated by iptables-save v1.4.21 on Fri Apr  1 19:19:21 2016</span><br><span class="line">*nat</span><br><span class="line">:PREROUTING ACCEPT [0:0]</span><br><span class="line">:INPUT ACCEPT [0:0]</span><br><span class="line">:OUTPUT ACCEPT [0:0]</span><br><span class="line">:POSTROUTING ACCEPT [0:0]</span><br><span class="line">-A POSTROUTING -o eno16777728 -j MASQUERADE</span><br><span class="line">COMMIT</span><br></pre></td></tr></table></figure></p>
+<p>让iptables随系统自启动<br><code>systemctl enable iptables.service</code><br><code>systemctl restart iptables.service</code></p>
+<h5 id="开启路由转发"><a href="#开启路由转发" class="headerlink" title="开启路由转发"></a>开启路由转发</h5><p>编译配置文件<br><code>vi  /etc/sysctl.conf</code><br>写入以下内容<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">net.ipv4.ip_forward=1</span><br><span class="line">net.ipv4.conf.all.rp_filter=0</span><br><span class="line">net.ipv4.conf.default.rp_filter=0</span><br></pre></td></tr></table></figure></p>
+<p>验证并生效<br><code>sysctl -p</code></p>
+<h5 id="安装Keepalived"><a href="#安装Keepalived" class="headerlink" title="安装Keepalived"></a>安装Keepalived</h5><p><code>yum install keepalived</code></p>
+<h5 id="安装Kubernetes的masternode组件"><a href="#安装Kubernetes的masternode组件" class="headerlink" title="安装Kubernetes的masternode组件"></a>安装Kubernetes的masternode组件</h5><p>这里先安装masternode组件，等测试完成后再分别在两台机上安装workernode组件。要注意的是安装完成后不要把masternode设置为服务自动启动（workernode各服务需要设置为自动启动），先单独测试masternode是工作正常的，之后需要设置etcd，把etcd的配置文件放在一个网络共享目录底下。共享目录可以用nfs或者glusterfs组建，并确保共享目录的客户端一定要在Kubernetes服务启动之前启动完成。<br>此外Kubernetes的API server地址请配置为内网的虚拟IP10.10.10.100（根据实际修改）<br>安装和设置过程略</p>
+<h5 id="配置双网卡"><a href="#配置双网卡" class="headerlink" title="配置双网卡"></a>配置双网卡</h5><p>在所有的软件安装完成后开始配置双网卡，目的在于让两台机的外网网卡的IP地址为空，这样不会占用外网的IP资源。虽然Keepalvied官网或者网上没有案例为IP地址为空的网卡自动生成IP，实际上是可行的，同时也不会在外网网口发送以太网包来侦测碰撞。<br>下面的配置仅供参考，以实际为准进行修改。<br>外网网卡eno16777728的配置如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">TYPE=Ethernet</span><br><span class="line">BOOTPROTO=none</span><br><span class="line">DEVICE=eno16777728</span><br><span class="line">ONBOOT=yes</span><br></pre></td></tr></table></figure></p>
+<p>内网网卡eno33554968的配置如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">TYPE=Ethernet</span><br><span class="line">BOOTPROTO=static</span><br><span class="line">IPADDR=10.10.10.201</span><br><span class="line">PREFIX=24</span><br><span class="line">DEVICE=eno33554968</span><br><span class="line">ONBOOT=yes</span><br></pre></td></tr></table></figure></p>
+<h4 id="配置Keepalived"><a href="#配置Keepalived" class="headerlink" title="配置Keepalived"></a>配置Keepalived</h4><p>修改Keepalived的配置文件<br><code>vi /etc/keepalived/keepalived.conf</code><br>下面是master的配置，其中backup备机中state修改为BACKUP，priority为80<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">! Configuration File for keepalived</span><br><span class="line">vrrp_instance VI_1 &#123;</span><br><span class="line">    state MASTER</span><br><span class="line">    interface eno33554968</span><br><span class="line">    virtual_router_id 51</span><br><span class="line">    priority 100</span><br><span class="line">    advert_int 1</span><br><span class="line">    authentication &#123;</span><br><span class="line">        auth_type PASS</span><br><span class="line">        auth_pass 1111</span><br><span class="line">    &#125;</span><br><span class="line">    virtual_ipaddress &#123;</span><br><span class="line">        192.168.7.11/24 brd 192.168.7.255 dev eno16777728</span><br><span class="line">        10.10.10.100/24 brd 10.10.10.255 dev eno33554968 label eno33554968:1</span><br><span class="line">    &#125;</span><br><span class="line">    virtual_routes &#123;</span><br><span class="line">        default via 192.168.7.2</span><br><span class="line">    &#125;</span><br><span class="line">    notify_master /opt/script/to_master.sh</span><br><span class="line">    notify_backup /opt/script/to_backup.sh</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>其中192.168.7.11是外网IP，Keepalived启动后会给外网网卡eno16777728赋予。<br>10.10.10.100是内网虚拟IP，会在原内网网卡eno33554968上面新生成一个网络设备eno33554968:1。该地址作为Kubernetes的API server IP。<br>这里要说明一下的是interface是传输vrrp的网口，因为会一直对外发包，通常设置为内网网口。<br>to_master.sh的脚本如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">systemctl start etcd kube-apiserver</span><br><span class="line">systemctl start kube-scheduler kube-controller-manager</span><br><span class="line">route del default gw 10.10.10.100</span><br></pre></td></tr></table></figure></p>
+<p>to_backup.sh的脚本如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">systemctl stop etcd kube-apiserver</span><br><span class="line">systemctl stop kube-scheduler kube-controller-manager</span><br><span class="line">route add default gw 10.10.10.100</span><br></pre></td></tr></table></figure></p>
+<h4 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h4><p>分别在两台机器分别启动Keepalived<br><code>systemctl enable keepalived</code><br><code>systemctl start keepalived</code><br>观测查看该网络中所存在的vrid包<br><code>tcpdump -nn -i any net 224.0.0.0/8</code><br>如果有不断发往两台机的包，并成功收收表示工作正常。<br>分别查看Keepalived日志<br><code>tail -f /var/log/messages</code><br>会分别看到一台机器变为MASTER，另外一台则变为BACKUP状态。<br>Kubernetes的masternode各组件会被Keepalived的两个脚本控制启动状态，关闭MASTER主机，则会由BACKUP备机接管外网IP、内网虚拟IP，添加默认路由，启动Kubernetes的masternode各组件。</p>
+<h4 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h4><p>这里没有停用Keeaplived服务来测试切换特性，是因为这里没有使用相关的脚本，停用Keeaplived之后Kubernetes的各组件服务并不会自动停止，即便如此，因为内网IP，也就是Kubernetes的API server地址已切换到备机，并不会产生影响，只是两机的etcd因为共享同一配置文件，备机上的etcd是启动不了的。<br>目前的配置只考虑了MASTER主机掉电或损坏脱离网络的情况，并没有考虑Kubernetes组件失效的因素。其实本次测试中是带有Keepalived的检测和失效后执行的脚本的，可惜并不如意，容待日后完善。</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Keepalived/" rel="tag">#Keepalived</a>
+          
+            <a href="/tags/Kubernetes/" rel="tag">#Kubernetes</a>
+          
+            <a href="/tags/CentOS7/" rel="tag">#CentOS7</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2016/05/23/国斗繁殖全记录/" rel="next" title="国斗繁殖全记录">
+                <i class="fa fa-chevron-left"></i> 国斗繁殖全记录
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div class="ds-thread" data-thread-key="2016/05/25/Keepalived在Kubernetes中的应用/"
+           data-title="Keepalived在Kubernetes中的应用" data-url="http://www.zengyee.me/2016/05/25/Keepalived在Kubernetes中的应用/">
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.jpg"
+               alt="zengyee" />
+          <p class="site-author-name" itemprop="name">zengyee</p>
+          <p class="site-description motion-element" itemprop="description">我们都生活在阴沟里，但仍有人仰望星空。</p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">4</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">4</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">6</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#准备工作"><span class="nav-number">2.</span> <span class="nav-text">准备工作</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#禁用selinux"><span class="nav-number">2.1.</span> <span class="nav-text">禁用selinux</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#禁用防火墙"><span class="nav-number">2.2.</span> <span class="nav-text">禁用防火墙</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#设置DNS"><span class="nav-number">2.3.</span> <span class="nav-text">设置DNS</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#安装可选软件"><span class="nav-number">2.4.</span> <span class="nav-text">安装可选软件</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#安装并配置iptables"><span class="nav-number">2.5.</span> <span class="nav-text">安装并配置iptables</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#开启路由转发"><span class="nav-number">2.6.</span> <span class="nav-text">开启路由转发</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#安装Keepalived"><span class="nav-number">2.7.</span> <span class="nav-text">安装Keepalived</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#安装Kubernetes的masternode组件"><span class="nav-number">2.8.</span> <span class="nav-text">安装Kubernetes的masternode组件</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#配置双网卡"><span class="nav-number">2.9.</span> <span class="nav-text">配置双网卡</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#配置Keepalived"><span class="nav-number">3.</span> <span class="nav-text">配置Keepalived</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#测试"><span class="nav-number">4.</span> <span class="nav-text">测试</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#后记"><span class="nav-number">5.</span> <span class="nav-text">后记</span></a></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2016</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zengyee</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" href="http://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+  
+    
+  
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"zengyee"};
+    (function() {
+      var ds = document.createElement('script');
+      ds.type = 'text/javascript';ds.async = true;
+      ds.id = 'duoshuo-script';
+      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      ds.charset = 'UTF-8';
+      (document.getElementsByTagName('head')[0]
+      || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+  </script>
+
+  
+    
+  
+
+
+
+
+
+  
+  
+  
+
+  
+
+  
+  <script src="https://cdn1.lncld.net/static/js/av-core-mini-0.6.1.js"></script>
+  <script>AV.initialize("yhRo02fYQdx3CvJIk3bhJykb-gzGzoHsz", "NPgFz925MG92eYyBO3zLdnzj");</script>
+  <script>
+    function showTime(Counter) {
+      var query = new AV.Query(Counter);
+      var entries = [];
+      var $visitors = $(".leancloud_visitors");
+
+      $visitors.each(function () {
+        entries.push( $(this).attr("id").trim() );
+      });
+
+      query.containedIn('url', entries);
+      query.find()
+        .done(function (results) {
+          var COUNT_CONTAINER_REF = '.leancloud-visitors-count';
+
+          if (results.length === 0) {
+            $visitors.find(COUNT_CONTAINER_REF).text(0);
+            return;
+          }
+
+          for (var i = 0; i < results.length; i++) {
+            var item = results[i];
+            var url = item.get('url');
+            var time = item.get('time');
+            var element = document.getElementById(url);
+
+            $(element).find(COUNT_CONTAINER_REF).text(time);
+          }
+        })
+        .fail(function (object, error) {
+          console.log("Error: " + error.code + " " + error.message);
+        });
+    }
+
+    function addCount(Counter) {
+      var $visitors = $(".leancloud_visitors");
+      var url = $visitors.attr('id').trim();
+      var title = $visitors.attr('data-flag-title').trim();
+      var query = new AV.Query(Counter);
+
+      query.equalTo("url", url);
+      query.find({
+        success: function(results) {
+          if (results.length > 0) {
+            var counter = results[0];
+            counter.fetchWhenSave(true);
+            counter.increment("time");
+            counter.save(null, {
+              success: function(counter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(counter.get('time'));
+              },
+              error: function(counter, error) {
+                console.log('Failed to save Visitor num, with error message: ' + error.message);
+              }
+            });
+          } else {
+            var newcounter = new Counter();
+            /* Set ACL */
+            var acl = new AV.ACL();
+            acl.setPublicReadAccess(true);
+            acl.setPublicWriteAccess(true);
+            newcounter.setACL(acl);
+            /* End Set ACL */
+            newcounter.set("title", title);
+            newcounter.set("url", url);
+            newcounter.set("time", 1);
+            newcounter.save(null, {
+              success: function(newcounter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(newcounter.get('time'));
+              },
+              error: function(newcounter, error) {
+                console.log('Failed to create');
+              }
+            });
+          }
+        },
+        error: function(error) {
+          console.log('Error:' + error.code + " " + error.message);
+        }
+      });
+    }
+
+    $(function() {
+      var Counter = AV.Object.extend("Counter");
+      if ($('.leancloud_visitors').length == 1) {
+        addCount(Counter);
+      } else if ($('.post-title-link').length > 1) {
+        showTime(Counter);
+      }
+    });
+  </script>
+
+
+
+  
+
+</body>
+</html>
