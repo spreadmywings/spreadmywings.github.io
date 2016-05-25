@@ -84,17 +84,17 @@
 
 
 
-<meta name="description" content="前言Keepalived在双机热备的用途上使用广泛，在功能不需要太复杂的场合比Heartbeat更易于配置，它的心跳检测功能和切换时滞也比后者更加优秀。Kubernetes是Docker的集群管理软件，无论功能性和管理的便利性都深得管理人员喜爱。Kubernetes的运算节点workernode运行着各类服务的Docker容器，在集群对某容器启用副本的情况下该容器便具备了故障自动转移的特性，也就">
+<meta name="description" content="前言Keepalived在双机热备的用途上使用广泛，在功能不需要太复杂的场合比Heartbeat更易于配置，它的心跳检测功能和切换时滞也比后者更加优秀。Kubernetes是Docker的集群管理软件，无论功能性和管理的便利性都深得管理人员喜爱。管理节点masternode默认是单节点，一旦失效则整个集群丧失管理能力。管理节点组成高可靠特性最少需要3个节点，在可用服务器或者可管理的workern">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Keepalived在Kubernetes中的应用">
 <meta property="og:url" content="http://www.zengyee.me/2016/05/25/Keepalived在Kubernetes中的应用/index.html">
 <meta property="og:site_name" content="zengyee's 私藏馆">
-<meta property="og:description" content="前言Keepalived在双机热备的用途上使用广泛，在功能不需要太复杂的场合比Heartbeat更易于配置，它的心跳检测功能和切换时滞也比后者更加优秀。Kubernetes是Docker的集群管理软件，无论功能性和管理的便利性都深得管理人员喜爱。Kubernetes的运算节点workernode运行着各类服务的Docker容器，在集群对某容器启用副本的情况下该容器便具备了故障自动转移的特性，也就">
+<meta property="og:description" content="前言Keepalived在双机热备的用途上使用广泛，在功能不需要太复杂的场合比Heartbeat更易于配置，它的心跳检测功能和切换时滞也比后者更加优秀。Kubernetes是Docker的集群管理软件，无论功能性和管理的便利性都深得管理人员喜爱。管理节点masternode默认是单节点，一旦失效则整个集群丧失管理能力。管理节点组成高可靠特性最少需要3个节点，在可用服务器或者可管理的workern">
 <meta property="og:image" content="http://www.zengyee.me/images/gear1.jpg">
-<meta property="og:updated_time" content="2016-05-25T09:06:08.695Z">
+<meta property="og:updated_time" content="2016-05-25T13:06:31.523Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Keepalived在Kubernetes中的应用">
-<meta name="twitter:description" content="前言Keepalived在双机热备的用途上使用广泛，在功能不需要太复杂的场合比Heartbeat更易于配置，它的心跳检测功能和切换时滞也比后者更加优秀。Kubernetes是Docker的集群管理软件，无论功能性和管理的便利性都深得管理人员喜爱。Kubernetes的运算节点workernode运行着各类服务的Docker容器，在集群对某容器启用副本的情况下该容器便具备了故障自动转移的特性，也就">
+<meta name="twitter:description" content="前言Keepalived在双机热备的用途上使用广泛，在功能不需要太复杂的场合比Heartbeat更易于配置，它的心跳检测功能和切换时滞也比后者更加优秀。Kubernetes是Docker的集群管理软件，无论功能性和管理的便利性都深得管理人员喜爱。管理节点masternode默认是单节点，一旦失效则整个集群丧失管理能力。管理节点组成高可靠特性最少需要3个节点，在可用服务器或者可管理的workern">
 <meta name="twitter:image" content="http://www.zengyee.me/images/gear1.jpg">
 
 
@@ -341,7 +341,7 @@
 
       
         <p><img src="/images/gear1.jpg" alt=""></p>
-<h4 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h4><p>Keepalived在双机热备的用途上使用广泛，在功能不需要太复杂的场合比Heartbeat更易于配置，它的心跳检测功能和切换时滞也比后者更加优秀。Kubernetes是Docker的集群管理软件，无论功能性和管理的便利性都深得管理人员喜爱。<br>Kubernetes的运算节点workernode运行着各类服务的Docker容器，在集群对某容器启用副本的情况下该容器便具备了故障自动转移的特性，也就是说一旦这个节点失效，调度器会在另外一个workernode节点启动该容器的副本从而实现容器的高可用。<br>管理节点masternode默认是单节点，一旦失效则整个集群丧失管理能力。管理节点组成高可靠特性最少需要3个节点，在可用服务器或者可管理的workernode不多的情况下使用Keepalived组建masternode高可用是个可行的选择，同时对于有外网接口的workernode（具有双网口），防止该节点失效导致服务不能出外网，用Keepalived搭建热备节点（备用节点同样做为workernode）也是很好的。<br><a id="more"></a><br>下面是本人实践的使用Keepalived创建masternode备用节点，同时该节点也作为workernode的一个实例。</p>
+<h4 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h4><p>Keepalived在双机热备的用途上使用广泛，在功能不需要太复杂的场合比Heartbeat更易于配置，它的心跳检测功能和切换时滞也比后者更加优秀。Kubernetes是Docker的集群管理软件，无论功能性和管理的便利性都深得管理人员喜爱。<br>管理节点masternode默认是单节点，一旦失效则整个集群丧失管理能力。管理节点组成高可靠特性最少需要3个节点，在可用服务器或者可管理的workernode不多的情况下使用Keepalived组建masternode高可用是个可行的选择，同时对于有外网接口的workernode（具有双网口），防止该节点失效导致服务不能出外网，用Keepalived搭建热备节点（备用节点同样做为workernode）也是很好的。<br><a id="more"></a><br>下面是本人实践的使用Keepalived创建masternode备用节点，同时该节点也作为workernode的一个实例。</p>
 <h4 id="准备工作"><a href="#准备工作" class="headerlink" title="准备工作"></a>准备工作</h4><p>两台CentOS7系统的服务器或虚拟机，分别做为Keepalived的master节点和backup节点。下面操作需要分别在两台机器上面完成。</p>
 <h5 id="禁用selinux"><a href="#禁用selinux" class="headerlink" title="禁用selinux"></a>禁用selinux</h5><p>略</p>
 <h5 id="禁用防火墙"><a href="#禁用防火墙" class="headerlink" title="禁用防火墙"></a>禁用防火墙</h5><p><code>systemctl disable firewalld.service</code></p>
